@@ -1,0 +1,175 @@
+import java.security.Key;
+import javax.crypto.spec.SecretKeySpec;
+import java.security.NoSuchAlgorithmException;
+import java.text.Normalizer;
+import java.text.Normalizer.Form;
+import java.util.Base64;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import javax.crypto.*;
+import javax.management.openmbean.InvalidKeyException;
+
+/**
+ * <h1> User's Bank Account</h1>
+ * The Bank Account program implements
+ * an application that permits the user
+ * to make deposits and withdrawals, and gets
+ * his/her account balance.
+ * <p>
+ * 
+ * @author Philip Herman
+ * @version 1.0
+ * @since 2020-05-03
+ */
+public class BankAccount {
+
+	/**
+	 * balance field to provide the user's balance
+	 * account number field to provide the user's account number
+	 */
+	 private double balance;
+	 private String name = " ";
+	private String accountNumber;
+	
+	/**
+	* Create an empty bank account constructor
+	* to initialize the beginning balance to zero.
+	*/
+	 public BankAccount ( ) {
+		 balance = 0;
+	 }
+	 
+	 /**
+	 *Create a second bank account constructor
+	 * that passes in the initial balance and
+	 * assigning it to the balance in the account.
+	 * @param initialBalance The user's initial balance in the account
+	 * @param nm The name of the user in the account
+	 * @param accountNumber The user's account number
+	 * */
+	public BankAccount(double initialBalance, String nm, String accountNumber) {
+		this.balance = initialBalance;
+		this.name = nm;
+		this.accountNumber= accountNumber;
+		// constructed an exception if any transaction happens with a current balance being negative
+		if (initialBalance < 0) {
+            throw new IllegalArgumentException("Accounts with a negative balance cannot be created!");
+		}
+	}
+	
+	/**
+	* The deposit method takes in the amount
+	* and adds it to the balance that's already in
+	* the account.
+	* @param amount The amount the user wants to deposit.
+	*/
+	public void Deposit (double amount) {
+			balance = (balance + amount);
+	}
+	
+	/**
+	 * The withdraw method takes in an amount
+	 * and permits the user to finish the withdrawal
+	 * if the balance in the account exceeds the desired
+	 * withdrawal amount.
+	 * @param amount The amount the user wants to withdraw.
+	 * @throws Exception The balance in the account
+	 * is not enough to make a withdrawal.
+	 */
+	public void Withdraw (double amount) throws Exception {
+		if (balance > amount) {
+			balance = (balance - amount);
+	}
+		else
+			throw new Exception ("Can't withdraw an amount if the initial balance is less.");
+	}
+	
+	/**
+	 * The getBalance method returns
+	 * the user's balance in the account.
+	 * @param args Unused.
+	 * @return balance This returns the user's 
+	 * current balance in his/her account.
+	 */
+	public double getBalance () {
+		return balance;
+	}
+	
+	/** The normalizeString method will 
+	 * take in a user's account number and validate whether 
+	 * the user's account number is correct.
+	 * @param accountnum The user's account number.
+	*/
+	public static void NormalizeString(String accountnum) { 
+		accountnum = "";
+		accountnum = Normalizer.normalize(accountnum, Form.NFKC);
+		
+		Pattern pat = Pattern.compile("[<>]");
+		Matcher mat = pat.matcher(accountnum);
+		if(mat.find()) {
+			throw new IllegalStateException("Error!"); 
+		}
+		else {
+			System.out.println("The user's name is correct");
+		}
+	}
+
+
+	/**
+	 * The string encode method will be
+	 * utilized to encode a user's account number.
+	 * @param s The string to encode.
+	 * @return Returns an encoded string.
+	 */
+		public static String encodeAcctNum (String s) {
+			Base64.Encoder encoder = Base64.getEncoder();
+			byte[] encoded = encoder.encode(s.getBytes());
+			return new String(encoded);
+		}
+		
+	/**
+	 * The EncryptUserPIN method takes in the user's PIN to encrypt.  
+	 *  A key is generated using the AES/ECB/PKCS5Padding transformation.
+	 * @param pin, the PIN to be encrypted
+	 * @param keyBytes, specifying the bytes of the key
+	 * @return pin, the encrypted PIN
+	 * @throws InvalidKeyException
+	 * @throws NoSuchPaddingException
+	 * @throws NoSuchAlgorithmException
+	 * @throws java.security.InvalidKeyException 
+	 * @throws BadPaddingException 
+	 * @throws IllegalBlockSizeException 
+	 */
+		public byte[] EncryptUserPIN(byte[] pin, byte[] keyBytes) throws InvalidKeyException, NoSuchPaddingException, NoSuchAlgorithmException, java.security.InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+			
+			Cipher c = Cipher.getInstance("AES/ECB/PKCS5Padding");
+			SecretKey sk = new SecretKeySpec(keyBytes, "AES");
+			c.init(Cipher.ENCRYPT_MODE, sk);
+			
+			return c.doFinal(pin);
+		}
+	
+	/**
+	 * The DecryptUserPIN method takes in an encrypted user PIN and decrypts it. 
+	 * The user's PIN will be decrypted.
+	 * A key is generated using the AES/ECB/PKCS5Padding transformation.
+	 * @param encryptedPIN, the PIN to decrypt
+	 * @param keyBytes, the bytes of the key
+	 * @return encryptedPIN, the original PIN that was previously encrypted
+	 * @throws InvalidKeyException
+	 * @throws NoSuchPaddingException
+	 * @throws NoSuchAlgorithmException
+	 * @throws IllegalBlockSizeException
+	 * @throws java.security.InvalidKeyException 
+	 * @throws BadPaddingException 
+	 */
+		public byte[] DecryptUserPIN(byte[] encryptedPIN, byte[] keyBytes) throws InvalidKeyException, NoSuchPaddingException, NoSuchAlgorithmException, IllegalBlockSizeException, java.security.InvalidKeyException, BadPaddingException {
+			
+			Cipher c = Cipher.getInstance("AES/ECB/PKCS5Padding");
+			SecretKey sk = new SecretKeySpec(keyBytes, "AES");
+			c.init(Cipher.DECRYPT_MODE, sk);
+			
+			return c.doFinal(encryptedPIN);
+		}
+}
+ 
